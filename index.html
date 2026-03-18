@@ -1,1 +1,507 @@
-عادي 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المساعد الذكي - Abdulrahman Ahmed Bashir</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 1.5rem; }
+        .settings-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+        }
+        .chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;            max-height: 500px;
+            background: #f8f9fa;
+        }
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message.user { flex-direction: row-reverse; }
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin: 0 10px;
+        }
+        .message.bot .message-avatar { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .message.user .message-avatar { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            line-height: 1.6;
+        }
+        .message.bot .message-content {
+            background: white;
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-bottom-left-radius: 5px;
+        }
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+        .input-wrapper { display: flex; gap: 10px; }        #userInput {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1rem;
+            resize: none;
+            outline: none;
+        }
+        #userInput:focus { border-color: #667eea; }
+        #sendBtn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+        }
+        #sendBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .typing {
+            display: none;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: fit-content;
+        }
+        .typing.active { display: flex; gap: 5px; align-items: center; }
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+        }
+        .modal-content h2 { color: #667eea; margin-bottom: 15px; }
+        .modal-content p { margin-bottom: 20px; color: #666; line-height: 1.6; }
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+        .modal-content button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .modal-content a { color: #667eea; text-decoration: none; font-weight: 600; }
+        .status {
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+        .status.connected { background: #c6f6d5; color: #22543d; }
+        .status.disconnected { background: #fed7d7; color: #742a2a; }
+        .footer {
+            background: #f8f9fa;            padding: 15px;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+        }
+        .developer-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .footer p { margin-top: 10px; font-size: 0.85rem; color: #666; }
+        .welcome { text-align: center; padding: 40px 20px; color: #666; }
+        .welcome-icon { font-size: 4rem; margin-bottom: 20px; }
+        .suggestions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .suggestion-card {
+            padding: 15px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .suggestion-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px;
+            display: none;
+        }
+        .error.active { display: block; }
+        @media (max-width: 600px) {
+            .container { margin: 0; border-radius: 0; min-height: 100vh; }
+            .message-content { max-width: 85%; }
+            .suggestions { grid-template-columns: 1fr; }        }
+    </style>
+</head>
+<body>
+    <!-- API Key Modal -->
+    <div class="modal active" id="apiModal">
+        <div class="modal-content">
+            <h2>🔑 مفتاح API</h2>
+            <div id="apiStatus" class="status disconnected">
+                ❌ غير متصل
+            </div>
+            <p>
+                عشان الذكاء الاصطناعي يشتغل، تحتاج مفتاح API مجاني
+                <br><br>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank">📌 اضغط هنا عشان تحصل على المفتاح</a>
+            </p>
+            <input type="password" id="apiKey" placeholder="الصق المفتاح هنا...">
+            <button onclick="saveKey()">💾 حفظ المفتاح</button>
+            <p style="margin-top: 15px; font-size: 0.85rem; color: #999;">
+                المفتاح هيتم حفظه في المتصفح
+            </p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🤖 المساعد الذكي</h1>
+            <button class="settings-btn" onclick="showSettings()">⚙️ الإعدادات</button>
+        </div>
+
+        <div class="error" id="errorMsg"></div>
+
+        <div class="chat-box" id="chatBox">
+            <div class="welcome" id="welcomeMsg">
+                <div class="welcome-icon">👋</div>
+                <h2>أهلاً وسهلاً!</h2>
+                <p>أنا هنا لمساعدتك. اسألني عن أي شيء!</p>
+                <div class="suggestions">
+                    <div class="suggestion-card" onclick="quickAsk('ما هو الذكاء الاصطناعي؟')">
+                        <strong> ما هو الذكاء الاصطناعي؟</strong>
+                    </div>
+                    <div class="suggestion-card" onclick="quickAsk('ساعدني في كتابة بريد إلكتروني')">
+                        <strong>📧 كتابة بريد إلكتروني</strong>
+                    </div>
+                    <div class="suggestion-card" onclick="quickAsk('أعطني أفكاراً لمشروع جديد')">
+                        <strong>💡 أفكار مشاريع</strong>
+                    </div>
+                    <div class="suggestion-card" onclick="quickAsk('اشرح لي البرمجة ببساطة')">
+                        <strong>💻 شرح البرمجة</strong>
+                    </div>                </div>
+            </div>
+        </div>
+
+        <div class="typing" id="typing">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea id="userInput" placeholder="اكتب سؤالك هنا..." rows="1" onkeypress="handleKey(event)"></textarea>
+                <button id="sendBtn" onclick="sendMessage()">إرسال</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="developer-badge">
+                <span>⚡</span>
+                <span>تصميم وتطوير Abdulrahman Ahmed Bashir</span>
+            </div>
+            <p>© 2024 جميع الحقوق محفوظة | Abdulrahman Ahmed Bashir</p>
+        </div>
+    </div>
+
+    <script>
+        let apiKey = '';
+        let conversation = [];
+
+        // Check for saved API key on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedKey = localStorage.getItem('gemini_api_key');
+            console.log('Saved key found:', savedKey ? 'Yes' : 'No');
+            
+            if (savedKey && savedKey.length > 10) {
+                apiKey = savedKey;
+                document.getElementById('apiModal').classList.remove('active');
+                updateStatus(true);
+            } else {
+                updateStatus(false);
+            }
+        });
+
+        function updateStatus(connected) {
+            const status = document.getElementById('apiStatus');
+            if (connected) {
+                status.className = 'status connected';
+                status.innerHTML = '✅ متصل - المفتاح محفوظ';
+            } else {                status.className = 'status disconnected';
+                status.innerHTML = '❌ غير متصل - تحتاج مفتاح';
+            }
+        }
+
+        function saveKey() {
+            const key = document.getElementById('apiKey').value.trim();
+            console.log('Saving key:', key ? 'Key entered' : 'No key');
+            
+            if (!key || key.length < 10) {
+                showError('⚠️ المفتاح غير صحيح. تأكد من نسخه كاملاً');
+                return;
+            }
+
+            try {
+                apiKey = key;
+                localStorage.setItem('gemini_api_key', key);
+                
+                // Verify it was saved
+                const verify = localStorage.getItem('gemini_api_key');
+                console.log('Key saved and verified:', verify ? 'Yes' : 'No');
+                
+                document.getElementById('apiModal').classList.remove('active');
+                updateStatus(true);
+                showSuccess('✅ تم حفظ المفتاح بنجاح!');
+            } catch (e) {
+                showError('❌ خطأ في الحفظ. تأكد من إعدادات المتصفح');
+                console.error('Save error:', e);
+            }
+        }
+
+        function showSettings() {
+            document.getElementById('apiKey').value = apiKey;
+            document.getElementById('apiModal').classList.add('active');
+            updateStatus(apiKey.length > 10);
+        }
+
+        function handleKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function quickAsk(text) {
+            document.getElementById('userInput').value = text;
+            sendMessage();
+        }
+
+        async function sendMessage() {            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            if (!apiKey || apiKey.length < 10) {
+                showSettings();
+                showError('⚠️ تحتاج مفتاح API أولاً');
+                return;
+            }
+
+            document.getElementById('welcomeMsg').style.display = 'none';
+            addMessage(text, 'user');
+            input.value = '';
+            input.style.height = 'auto';
+
+            const btn = document.getElementById('sendBtn');
+            btn.disabled = true;
+            document.getElementById('typing').classList.add('active');
+            document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+
+            try {
+                console.log('Sending to API...');
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: text }] }],
+                        generationConfig: {
+                            temperature: 0.7,
+                            maxOutputTokens: 1024
+                        }
+                    })
+                });
+
+                console.log('API Response status:', response.status);
+
+                if (!response.ok) {
+                    if (response.status === 400) throw new Error('المفتاح غير صحيح');
+                    if (response.status === 429) throw new Error('تجاوزت الحد المسموح، انتظر دقيقة');
+                    if (response.status === 403) throw new Error('المفتاح غير مفعل');
+                    throw new Error(`خطأ في الاتصال (${response.status})`);
+                }
+
+                const data = await response.json();
+                console.log('API Response:', data);
+                
+                if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+                    throw new Error('لم يتم الحصول على إجابة');
+                }                
+                const reply = data.candidates[0].content.parts[0].text;
+                
+                document.getElementById('typing').classList.remove('active');
+                addMessage(reply, 'bot');
+                conversation.push({ role: 'user', content: text });
+                conversation.push({ role: 'bot', content: reply });
+
+            } catch (err) {
+                console.error('Error:', err);
+                document.getElementById('typing').classList.remove('active');
+                showError('❌ ' + err.message);
+                
+                // If key is invalid, clear it
+                if (err.message.includes('غير صحيح') || err.message.includes('غير مفعل')) {
+                    localStorage.removeItem('gemini_api_key');
+                    apiKey = '';
+                    setTimeout(() => showSettings(), 2000);
+                }
+            }
+
+            btn.disabled = false;
+        }
+
+        function addMessage(text, sender) {
+            const chatBox = document.getElementById('chatBox');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+            
+            const avatar = sender === 'user' ? 'أنت' : 'AI';
+            msgDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">${formatText(text)}</div>
+            `;
+            
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function formatText(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function showError(msg) {
+            const err = document.getElementById('errorMsg');
+            err.textContent = msg;
+            err.classList.add('active');
+            setTimeout(() => err.classList.remove('active'), 5000);        }
+
+        function showSuccess(msg) {
+            const err = document.getElementById('errorMsg');
+            err.style.background = '#c6f6d5';
+            err.style.color = '#22543d';
+            err.textContent = msg;
+            err.classList.add('active');
+            setTimeout(() => {
+                err.classList.remove('active');
+                err.style.background = '#fee';
+                err.style.color = '#c33';
+            }, 3000);
+        }
+    </script>
+</body>
+  </html>
